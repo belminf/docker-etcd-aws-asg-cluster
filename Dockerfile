@@ -2,8 +2,8 @@ FROM quay.io/coreos/etcd:v3.3.10
 
 # Need curl, jq and awscli
 RUN set -ex \
-	&& apk update \
-	&& apk add --no-cache curl jq python \
+    && apk update \
+    && apk add --no-cache curl jq python \
     && apk add --no-cache --virtual pip-install-deps py-pip \
     && pip install --no-cache-dir  awscli \
     && apk del pip-install-deps
