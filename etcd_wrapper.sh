@@ -42,7 +42,6 @@ etcd_join() {
 
 	# Run a localhost etcd
 	## Needed because if the cluster size is 1, you need etcd running to join and make it 2
-	echo "STARTING THE PID!! - $name $ip $endpoint_ip"
 	local etcd_join_cluster="$(echo_etcd_join_cluster "$name" "$ip" "$endpoint_ip")"
 
 	# See if add command succeeded
@@ -70,22 +69,8 @@ echo_etcd_join_cluster() {
 	local ip="$2"
 	local endpoint_ip="$3"
 
-	#etcd \
-	#--name "${name}" \
-	#--data-dir /etcd-data \
-	#--initial-advertise-peer-urls "http://${ip}:2380" \
-	#--listen-peer-urls "http://0.0.0.0:2380" \
-	#--advertise-client-urls "http://${ip}:2379" \
-	#--listen-client-urls "http://0.0.0.0:2379" \
-	#--initial-cluster "${name}=http://${ip}:2380" \
-	#--initial-cluster-state 'new' &
-	#local etcd_bg_pid="$!"
-
 	# Save member add output
 	local join_output="$(etcdctl --endpoint "http://${endpoint_ip}:2379" member add "${name}" "http://${ip}:2380")"
-
-	# Kill background etcd, no longer needed
-	#kill -9 "$etcd_bg_pid"
 
 	# Echo the cluster variable
 	echo "$join_output" | sed -n '/ETCD_INITIAL_CLUSTER=/ { s/ETCD_INITIAL_CLUSTER=//p }' | tr -d '"'
