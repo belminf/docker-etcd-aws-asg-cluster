@@ -126,38 +126,26 @@ etcd_try_joins() {
 i=1
 while [ "$i" -le "$RETRIES" ]; do
 
-	# Sleep before every interation after first
-	if [ "$i" -gt 1 ]; then
-
-		# Sleep DELAY + RANDOM SPLAY
-		sleep "$((DELAY + (RANDOM % SPLAY)))s"
-	fi
+	# Sleep before every interation
+	sleep "$((DELAY + (RANDOM % SPLAY)))s"
 
 	get_asg_instances
 
 	echo "Attempt $i - Instances: $(echo -e "$INSTANCES" | tr "\n" ' ')"
 
-	# Leave if we joined
+	# Try to join ASG members and exit loop if successful
 	if etcd_try_joins "$INSTANCES"; then
 		break
 	fi
 
-	# Wait, if I couldn't join anything.. AM I MASTER??! :-D
+	# Wait, if I couldn't join anything.. SHOULD I BE MASTER??! :-D
+	# (To avoid multiple clusters, only the first ASG member in the sorted list tries)
 	if [ "$MY_INSTANCE" = "$FIRST_INSTANCE" ]; then
 
-		# Let's sleep on it and then double check
-		echo "Attempt $i - Master candiate: Delaying to double check..."
-		sleep "${DELAY}s"
-		get_asg_instances
-
-		# They do love me!
-		if [ "$MY_INSTANCE" = "$FIRST_INSTANCE" ]; then
-
-			# Start a cluster
-			echo "Attempt $i - Master candidate: Still first, creating a new cluster..."
-			if etcd_run "$MY_INSTANCE" "$MY_IP" "${MY_INSTANCE}=http://${MY_IP}:2380" new; then
-				break
-			fi
+		# Start a cluster
+		echo "Attempt $i - Master candidate: First, creating a new cluster..."
+		if etcd_run "$MY_INSTANCE" "$MY_IP" "${MY_INSTANCE}=http://${MY_IP}:2380" new; then
+			break
 		fi
 	fi
 
